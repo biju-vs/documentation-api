@@ -1,20 +1,21 @@
 # Cloud Conformity API Keys API
 
-
 Below is a list of the available APIs:
 
 - [Get The Current User](#get-the-current-user)
 - [Get User Details](#get-user-details)
+- [Invite User](#invite-a-user)
 - [Update User Role and Account Access Level](#update-a-users-role-and-account-access-level)
 - [Revoke User](#revoke-user)
 
 ## User Privileges
+
 There are 4 possible Cloud Conformity roles. Each role grants different levels of access via the api. The roles are:
 
-- __organisation admin__
-- __organisation user with full access to account__
-- __organisation user with read-only access to account__
-- __organisation user with no access to account__
+- **organisation admin**
+- **organisation user with full access to account**
+- **organisation user with read-only access to account**
+- **organisation user with no access to account**
 
 User access to each endpoint is listed below:
 
@@ -43,6 +44,7 @@ User access to each endpoint is listed below:
 | POST /external-ids | Y | N | N | N |
 | GET /users/whoami | Y | Y | Y | Y |
 | GET /users/id | Y | Y | Y | Y |
+| POST /users | Y | N | N | N |
 | PATCH /users/id | Y | N | N | N |
 | DELETE /users/id | Y | N | N | N |
 
@@ -53,6 +55,9 @@ User access to each endpoint is listed below:
 
 *** If user role is ADMIN, organisation-level events will also be returned.
 
+\*\* User role will limit the amount of data they can GET or POST/PATCH. For more information, consult the [Settings ReadMe](./Settings.md#).
+
+\*\*\* If user role is ADMIN, organisation-level events will also be returned.
 
 ## Get The Current User
 
@@ -63,6 +68,7 @@ This endpoint get the current user.
 `GET /users/whoami`
 
 ##### Parameters
+
 This end point takes no parameters.
 
 Example Request:
@@ -72,6 +78,7 @@ curl -H "Content-Type: application/vnd.api+json" \
 -H "Authorization: ApiKey S1YnrbQuWagQS0MvbSchNHDO73XHqdAqH52RxEPGAggOYiXTxrwPfmiTNqQkTq3p" \
 https://us-west-2-api.cloudconformity.com/v1/users/whoami
 ```
+
 Example Response:
 
 ```
@@ -101,8 +108,6 @@ Example Response:
 }
 ```
 
-
-
 ## Get User Details
 
 This endpoint allows you to get the details of the specified user.
@@ -112,8 +117,8 @@ This endpoint allows you to get the details of the specified user.
 `GET /users/id`
 
 ##### Parameters
-- `id`: The Cloud Conformity ID of the user
 
+- `id`: The Cloud Conformity ID of the user
 
 Example Request:
 
@@ -122,7 +127,9 @@ curl -H "Content-Type: application/vnd.api+json" \
 -H "Authorization: ApiKey S1YnrbQuWagQS0MvbSchNHDO73XHqdAqH52RxEPGAggOYiXTxrwPfmiTNqQkTq3p" \
 https://us-west-2-api.cloudconformity.com/v1/users/CClqMqknVb
 ```
+
 Example Response:
+
 ```
 {
     "data": {
@@ -153,6 +160,113 @@ Example Response:
 }
 ```
 
+## Invite a User
+
+This endpoint allows you to invite a user to your organisation.
+
+##### Endpoints:
+
+`POST /users`
+
+##### Parameters
+
+- `data`: A JSON object containing the following properties
+  - `attributes`: Object containing user attributes.
+    - `firstName`: first name of the user, which must be a string
+    - `lastName`: last name of the user, which must be a string
+    - `email`: email of the user which must be a string
+    - `role`: The role which the user is assigned to { ADMIN | USER }
+    - `accessList`: **(optional field when for a USER role, not required for ADMIN role)** An array of objects containing access level for an account:
+      - `account`: The account id within the organisation, which must be a string
+      - `level`: The level of access the user has to the account { NONE | READONLY | FULL }, which must be a string
+
+Please note only accounts (listed inside the `accessList`) in the request will get updated, existing account permissions are retained.
+If a new user is invited with the role of `USER` and an `accessList` is not provided, the users level permission for all accounts will default to `NONE`
+If a user is re-invited with the role of `USER`, the user will maintain the old account level permissions, unless an `accessList` is provided to update the permission.
+
+Example Request for inviting a user as an ADMIN:
+
+```
+curl -H "Content-Type: application/vnd.api+json" \
+-H "Authorization: ApiKey S1YnrbQuWagQS0MvbSchNHDO73XHqdAqH52RxEPGAggOYiXTxrwPfmiTNqQkTq3p" \
+-d
+'{
+    "data": {
+        "attributes": {
+            "firstName": "Cool",
+            "lastName": "Claude",
+            "role": "ADMIN",
+            "email": "cc_user@cloudconformity.com"
+        }
+    }
+}'
+\
+https://us-west-2-api.cloudconformity.com/v1/users
+```
+
+Example Response:
+
+```
+{
+    "data": {
+        "type": "users",
+        "id": "OhnzPVXY",
+        "attributes": {
+            "first-name": "Cool",
+            "last-name": "Claude",
+            "role": "ADMIN",
+            "email": "cc_user@cloudconformity.com",
+            "status": "INVITED",
+            "last-login-date": null,
+            "created-date": 1575943588002,
+            "has-credentials": false
+        },
+        "relationships": {
+            "organisation": {
+                "data": {
+                    "type": "organisations",
+                    "id": "A9NDYY12z"
+                }
+            }
+        }
+    }
+}
+```
+
+Example request for inviting a user with custom permissions:
+
+```
+curl -H "Content-Type: application/vnd.api+json" \
+-H "Authorization: ApiKey S1YnrbQuWagQS0MvbSchNHDO73XHqdAqH52RxEPGAggOYiXTxrwPfmiTNqQkTq3p" \
+-d
+'{
+    "data": {
+        "attributes": {
+            "firstName": "Cool",
+            "lastName": "Claude",
+            "role": "USER",
+            "email": "cc_user@cloudconformity.com",
+            "accessList": [
+                {
+                    "account": "A9_DsY12z",
+                    "level": "FULL"
+                },
+                {
+                    "account": "BqdYgfas",
+                    "level": "NONE"
+                },
+                {
+                    "account": "kPiASD21",
+                    "level": "READONLY"
+                }
+            ]
+        }
+    }
+}'
+\
+https://us-west-2-api.cloudconformity.com/v1/users
+```
+
 ## Update a User's Role and Account Access Level
 
 Update the role and permissions of the specified user.
@@ -180,7 +294,7 @@ curl -H "Content-Type: application/vnd.api+json" \
 -d '
 {
     "data": {
-        role: "ADMIN"
+        "role": "ADMIN"
     }
 }
 ' \
@@ -227,19 +341,19 @@ curl -H "Content-Type: application/vnd.api+json" \
 -d '
 {
     "data": {
-		role: "USER",
-        accessList: [
+	    "role": "USER",
+        "accessList": [
             {
-                account: "ad03IHuI_",
-                level: "FULL"
+                "account": "ad03IHuI_",
+                "level": "FULL"
             },
             {
-                account: "Oa1j-gGTX",
-                level: "READONLY"
+                "account": "Oa1j-gGTX",
+                "level": "READONLY"
             },
             {
-                account: "Pa_dgRTA",
-                level: "NONE"
+                "account": "Pa_dgRTA",
+                "level": "NONE"
             }
         ]
 	}
@@ -256,11 +370,11 @@ curl -H "Content-Type: application/vnd.api+json" \
 -d '
 {
     "data": {
-        role: "USER",
-        accessList: [
+        "role": "USER",
+        "accessList": [
             {
-                account: "ad03IHuI_",
-                level: "READONLY"
+                "account": "ad03IHuI_",
+                "level": "READONLY"
             }
         ]
     }
