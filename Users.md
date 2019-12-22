@@ -43,6 +43,7 @@ User access to each endpoint is listed below:
 | POST /external-ids | Y | N | N | N |
 | GET /users/whoami | Y | Y | Y | Y |
 | GET /users/id | Y | Y | Y | Y |
+| POST /users/ | Y | N | N | N |
 | PATCH /users/id | Y | N | N | N |
 | DELETE /users/id | Y | N | N | N |
 
@@ -101,6 +102,54 @@ Example Response:
 }
 ```
 
+Example Request for a USER with custom permissions:
+
+```
+curl -H "Content-Type: application/vnd.api+json" \
+-H "Authorization: ApiKey S1YnrbQuWagQS0MvbSchNHDO73XHqdAqH52RxEPGAggOYiXTxrwPfmiTNqQkTq3p" \
+https://us-west-2-api.cloudconformity.com/v1/users/whoami
+```
+Example Response:
+```
+{
+    "data": {
+        "type": "users",
+        "id": "517uNyIvG",
+        "attributes": {
+            "first-name": "Scott",
+            "last-name": "Tiger",
+            "role": "USER",
+            "email": "******@cloudconformity.com",
+            "status": "ACTIVE",
+            "mfa": false,
+            "last-login-date": 1503586843842,
+            "created-date": 1485834564224
+        },
+        "relationships": {
+            "organisation": {
+                "data": {
+                    "type": "organisations",
+                    "id": "A9NDYY12z"
+                }
+            },
+            "accountAccessList": [
+                {
+                    "account": "acc1abc",
+                    "level": "FULL"
+                },
+                {
+                    "account": "acc2abc",
+                    "level": "READONLY"
+                },
+                {
+                    "account": "acc3abc",
+                    "level": "FULL"
+                }
+        }
+    }
+}
+```
+
 
 
 ## Get User Details
@@ -151,6 +200,173 @@ Example Response:
         }
     }
 }
+```
+
+Example request when an ADMIN queries a USER with custom permissions:
+
+```
+curl -H "Content-Type: application/vnd.api+json" \
+-H "Authorization: ApiKey S1YnrbQuWagQS0MvbSchNHDO73XHqdAqH52RxEPGAggOYiXTxrwPfmiTNqQkTq3p" \
+https://us-west-2-api.cloudconformity.com/v1/users/517uNyIvG
+```
+Example Response:
+```
+{
+    "data": {
+        "type": "users",
+        "id": "517uNyIvG",
+        "attributes": {
+            "first-name": "Scott",
+            "last-name": "Tiger",
+            "role": "USER",
+            "email": "******@cloudconformity.com",
+            "status": "ACTIVE",
+            "mfa": false,
+            "last-login-date": 1503586843842,
+            "created-date": 1485834564224
+        },
+        "relationships": {
+            "organisation": {
+                "data": {
+                    "type": "organisations",
+                    "id": "A9NDYY12z"
+                }
+            },
+            "accountAccessList": [
+                {
+                    "account": "account1",
+                    "level": "FULL"
+                },
+                {
+                    "account": "account2",
+                    "level": "READONLY"
+                },
+                {
+                    "account": "account3",
+                    "level": "FULL"
+                },
+                {
+                    "account": "account4",
+                    "level": "NONE"
+                },
+                {
+                    "account": "account5",
+                    "level": "NONE"
+                },
+                {
+                    "account": "account6",
+                    "level": "NONE"
+                }
+        }
+    }
+}
+```
+
+## Invite a User
+
+This endpoint allows you to invite a user to your organisation.
+
+##### Endpoints:
+
+`POST /users`
+
+##### Parameters
+
+- `data`: A JSON object containing the following properties
+  - `attributes`: Object containing user attributes.
+    - `firstName`: first name of the user, which must be a string
+    - `lastName`: last name of the user, which must be a string
+    - `email`: email of the user which must be a string
+    - `role`: The role which the user is assigned to { ADMIN | USER }
+    - `accessList`: **(optional field when for a USER role, not required for ADMIN role)** An array of objects containing access level for an account:
+      - `account`: The account id within the organisation, which must be a string
+      - `level`: The level of access the user has to the account { NONE | READONLY | FULL }, which must be a string
+
+Please note only accounts (listed inside the `accessList`) in the request will get updated, existing account permissions are retained.
+If a new user is invited with the role of `USER` and an `accessList` is not provided, the users level permission for all accounts will default to `NONE`
+If a user is re-invited with the role of `USER`, the user will maintain the old account level permissions, unless an `accessList` is provided to update the permission.
+
+Example Request for inviting a user as an ADMIN:
+
+```
+curl -H "Content-Type: application/vnd.api+json" \
+-H "Authorization: ApiKey S1YnrbQuWagQS0MvbSchNHDO73XHqdAqH52RxEPGAggOYiXTxrwPfmiTNqQkTq3p" \
+-d
+'{
+    "data": {
+        "attributes": {
+            "firstName": "Cool",
+            "lastName": "Claude",
+            "role": "ADMIN",
+            "email": "cc_user@cloudconformity.com"
+        }
+    }
+}'
+\
+https://us-west-2-api.cloudconformity.com/v1/users
+```
+
+Example Response:
+
+```
+{
+    "data": {
+        "type": "users",
+        "id": "OhnzPVXY",
+        "attributes": {
+            "first-name": "Cool",
+            "last-name": "Claude",
+            "role": "ADMIN",
+            "email": "cc_user@cloudconformity.com",
+            "status": "INVITED",
+            "last-login-date": null,
+            "created-date": 1575943588002,
+            "has-credentials": false
+        },
+        "relationships": {
+            "organisation": {
+                "data": {
+                    "type": "organisations",
+                    "id": "A9NDYY12z"
+                }
+            }
+        }
+    }
+}
+```
+
+Example request for inviting a user with custom permissions:
+
+```
+curl -H "Content-Type: application/vnd.api+json" \
+-H "Authorization: ApiKey S1YnrbQuWagQS0MvbSchNHDO73XHqdAqH52RxEPGAggOYiXTxrwPfmiTNqQkTq3p" \
+-d
+'{
+    "data": {
+        "attributes": {
+            "firstName": "Cool",
+            "lastName": "Claude",
+            "role": "USER",
+            "email": "cc_user@cloudconformity.com",
+            "accessList": [
+                {
+                    account: "A9_DsY12z",
+                    level: "FULL"
+                },
+                {
+                    account: "BqdYgfas",
+                    level: "NONE"
+                },
+                {
+                    account: "kPiASD21",
+                    level: "READONLY"
+                }
+            ]
+        }
+    }
+}'
+\
+https://us-west-2-api.cloudconformity.com/v1/users
 ```
 
 ## Update a User's Role and Account Access Level
