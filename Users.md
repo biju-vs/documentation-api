@@ -5,6 +5,7 @@ Below is a list of the available APIs:
 
 - [Get The Current User](#get-the-current-user)
 - [Get User Details](#get-user-details)
+- [Get All Users](#get-all-users)
 - [Update User Role and Account Access Level](#update-a-users-role-and-account-access-level)
 - [Revoke User](#revoke-user)
 
@@ -43,6 +44,7 @@ User access to each endpoint is listed below:
 | POST /external-ids | Y | N | N | N |
 | GET /users/whoami | Y | Y | Y | Y |
 | GET /users/id | Y | Y | Y | Y |
+| GET /users | Y | N | N | N |
 | PATCH /users/id | Y | N | N | N |
 | DELETE /users/id | Y | N | N | N |
 
@@ -150,6 +152,99 @@ Example Response:
             }
         }
     }
+}
+```
+
+# Get all users
+
+This endpoint allows the current user to get the details of all users in the organisation.
+Only ADMINS are able to view all users in the organisation.
+
+#### Endpoints:
+
+`GET /users`
+
+#### Parameters
+
+This endpoint takes no parameters.
+
+```
+curl -H "Content-Type: application/vnd.api+json" \
+-H "Authorization: ApiKey S1YnrbQuWagQS0MvbSchNHDO73XHqdAqH52RxEPGAggOYiXTxrwPfmiTNqQkTq3p" \
+https://us-west-2-api.cloudconformity.com/v1/users
+```
+
+Example Response:
+```
+{
+    "data": [
+        {
+            "type": "users",
+            "id": "WTLZTMW3R",
+            "attributes": {
+                "first-name": "user",
+                "last-name": "user",
+                "role": "USER",
+                "email": "cc-user@cloudconformity.com",
+                "status": "ACTIVE",
+                "last-login-date": null,
+                "created-date": 1578023268196,
+                "has-credentials": false
+            },
+            "relationships": {
+                "organisation": {
+                    "data": {
+                        "type": "organisations",
+                        "id": "R8CAIKU9A"
+                    }
+                }
+            }
+        },
+        {
+            "type": "users",
+            "id": "RI9S7GQDP",
+            "attributes": {
+                "first-name": "user",
+                "last-name": "user",
+                "role": "ADMIN",
+                "email": "cc-admin@cloudconformity.com",
+                "status": "ACTIVE",
+                "last-login-date": null,
+                "created-date": 1575943767327,
+                "has-credentials": false
+            },
+            "relationships": {
+                "organisation": {
+                    "data": {
+                        "type": "organisations",
+                        "id": "R8CAIKU9A"
+                    }
+                }
+            }
+        },
+        {
+            "type": "users",
+            "id": "FI0SQMYWC",
+            "attributes": {
+                "first-name": "user",
+                "last-name": "user",
+                "role": "USER",
+                "email": "cc-user@cloudconformity.com",
+                "status": "INVITED",
+                "last-login-date": null,
+                "created-date": 1576469346533,
+                "has-credentials": false
+            },
+            "relationships": {
+                "organisation": {
+                    "data": {
+                        "type": "organisations",
+                        "id": "R8CAIKU9A"
+                    }
+                }
+            }
+        }
+    ]
 }
 ```
 
