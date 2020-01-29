@@ -5,6 +5,7 @@ Below is a list of the available APIs:
 
 - [Get The Current User](#get-the-current-user)
 - [Get User Details](#get-user-details)
+- [Add user](#Adding-a-SSO-User)
 - [Update User Role and Account Access Level](#update-a-users-role-and-account-access-level)
 - [Revoke User](#revoke-user)
 
@@ -43,6 +44,7 @@ User access to each endpoint is listed below:
 | POST /external-ids | Y | N | N | N |
 | GET /users/whoami | Y | Y | Y | Y |
 | GET /users/id | Y | Y | Y | Y |
+| POST /users/sso | Y | N | N | N |
 | PATCH /users/id | Y | N | N | N |
 | DELETE /users/id | Y | N | N | N |
 
@@ -299,6 +301,114 @@ Example Response
         }
     }
 }
+```
+
+## Adding a SSO User 
+
+This endpoint is available only for organisations with an external identity provider setup
+Only ADMINS from an external identity provider can use this endpoint to add new sso users to their organisation.
+
+##### Endpoints:
+
+`POST /users/sso`
+
+##### Parameters
+
+- `data`: A JSON object containing the following properties
+  - `attributes`: Object containing user attributes.
+    - `firstName`: first name of the user, which must be a string
+    - `lastName`: last name of the user, which must be a string
+    - `email`: email of the user which must be a string
+    - `role`: The role which the user is assigned to { ADMIN | USER }
+    - `accessList`: **(optional field when for a USER role, not required for ADMIN role)** An array of objects containing access level for an account:
+      - `account`: The account id within the organisation, which must be a string
+      - `level`: The level of access the user has to the account { NONE | READONLY | FULL }, which must be a string
+
+Please note only accounts (listed inside the `accessList`) in the request will get updated, existing account permissions are retained.
+If a new user is added with the role of `USER` and an `accessList` is not provided, the users level permission for all accounts will default to `NONE`
+If a user is added back into the organisation with the role of `USER`, the user will maintain the old account level permissions, unless an `accessList` is provided to update the permission.
+
+Example Request for admin a user as an ADMIN:
+
+```
+curl -H "Content-Type: application/vnd.api+json" \
+-H "Authorization: ApiKey S1YnrbQuWagQS0MvbSchNHDO73XHqdAqH52RxEPGAggOYiXTxrwPfmiTNqQkTq3p" \
+-d
+'{
+    "data": {
+        "attributes": {
+            "firstName": "sso",
+            "lastName": "user",
+            "role": "ADMIN",
+            "email": "sso_user@cloudconformity.com"
+        }
+    }
+}'
+\
+https://us-west-2-api.cloudconformity.com/v1/users/sso
+```
+
+Example Response:
+
+```
+{
+    "data": {
+        "type": "users",
+        "id": "abcdefg",
+        "attributes": {
+            "first-name": "sso",
+            "last-name": "user",
+            "role": "ADMIN",
+            "email": "sso_user@cloudconformity.com",
+            "status": "ACTIVE",
+            "last-login-date": null,
+            "created-date": 1575943588002,
+            "has-credentials": false
+        },
+        "relationships": {
+            "organisation": {
+                "data": {
+                    "type": "organisations",
+                    "id": "hijklmnop"
+                }
+            }
+        }
+    }
+}
+```
+
+Example request for adding a user with custom permissions:
+
+```
+curl -H "Content-Type: application/vnd.api+json" \
+-H "Authorization: ApiKey S1YnrbQuWagQS0MvbSchNHDO73XHqdAqH52RxEPGAggOYiXTxrwPfmiTNqQkTq3p" \
+-d
+'{
+    "data": {
+        "attributes": {
+            "firstName": "sso",
+            "lastName": "user",
+            "role": "USER",
+            "email": "sso_user@cloudconformity.com",
+            "accessList": [
+                {
+                    "account": "A9_DsY12z",
+                    "level": "FULL"
+                },
+                {
+                    "account": "BqdYgfas",
+                    "level": "NONE"
+                },
+                {
+                    "account": "kPiASD21",
+                    "level": "READONLY"
+                }
+            ]
+        }
+    }
+}'
+\
+https://us-west-2-api.cloudconformity.com/v1/users/sso
 ```
 
 ## Revoke User
